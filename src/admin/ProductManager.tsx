@@ -28,8 +28,65 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
   const [formImage, setFormImage] = useState('');
   const [formTrending, setFormTrending] = useState(false);
   const [formStock, setFormStock] = useState<'In Stock' | 'Low Stock' | 'Out of Stock'>('In Stock');
+  const [imageInputMode, setImageInputMode] = useState<'file' | 'url'>('file');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/webp', 0.85);
+
+          try {
+            const res = await fetch('/api/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ data: dataUrl, filename: file.name }),
+            });
+            const result = await res.json();
+            if (result.success && result.url) {
+              setFormImage(result.url);
+            } else {
+              setFormImage(dataUrl);
+            }
+          } catch (err) {
+            setFormImage(dataUrl);
+          }
+        }
+      };
+      if (event.target?.result) {
+        img.src = event.target.result as string;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const categories = useMemo(() => {
     return Array.from(new Set(products.map((p) => p.category))).filter(Boolean);
@@ -58,6 +115,7 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
     setFormCategory(categories[0] || 'Anime Figures');
     setFormAnime(animes[0] || 'Naruto');
     setFormImage('');
+    setImageInputMode('file');
     setFormTrending(false);
     setFormStock('In Stock');
     setIsAddModalOpen(true);
@@ -72,6 +130,7 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
     setFormCategory(p.category);
     setFormAnime(p.anime);
     setFormImage(p.image);
+    setImageInputMode(p.image?.startsWith('data:') ? 'file' : 'url');
     setFormTrending(Boolean(p.isTrending));
     setFormStock(p.stockStatus || 'In Stock');
     setIsAddModalOpen(true);
@@ -421,30 +480,88 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
                 </div>
               </div>
 
-              {/* Image URL */}
+              {/* Image Input (File Upload or URL) */}
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">
-                  Permanent Image URL *
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">
+                  Product Image *
                 </label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://assets.bankaistore.store/..."
-                  value={formImage}
-                  onChange={(e) => setFormImage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:border-primary text-foreground"
-                />
+
+                {/* Mode Selector */}
+                <div className="flex gap-2 mb-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setImageInputMode('file')}
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                      imageInputMode === 'file'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background border border-border text-muted-foreground hover:text-white'
+                    }`}
+                  >
+                    Upload from Device
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageInputMode('url')}
+                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                      imageInputMode === 'url'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background border border-border text-muted-foreground hover:text-white'
+                    }`}
+                  >
+                    Paste Image URL
+                  </button>
+                </div>
+
+                {imageInputMode === 'file' ? (
+                  <div className="space-y-2">
+                    <label className="border-2 border-dashed border-border/80 hover:border-primary/60 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer bg-background/50 transition-colors">
+                      <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
+                      <span className="text-xs font-semibold text-white">Click to select or drag image here</span>
+                      <span className="text-[11px] text-muted-foreground mt-0.5">Supports PNG, JPG, WebP (auto-optimized)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <input
+                    type="url"
+                    placeholder="https://assets.bankaistore.store/..."
+                    value={formImage}
+                    onChange={(e) => setFormImage(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-background border border-border rounded-xl focus:outline-none focus:border-primary text-foreground"
+                  />
+                )}
+
+                {/* Preview Box */}
                 {formImage && (
-                  <div className="mt-2 flex items-center gap-3 p-2 bg-background/50 rounded-xl border border-border">
-                    <img
-                      src={formImage}
-                      alt="Preview"
-                      className="w-12 h-12 rounded-lg object-cover bg-muted"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150';
-                      }}
-                    />
-                    <span className="text-xs text-muted-foreground">Image preview</span>
+                  <div className="mt-3 flex items-center justify-between p-2.5 bg-background/60 rounded-xl border border-border">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={formImage}
+                        alt="Preview"
+                        className="w-12 h-12 rounded-lg object-cover bg-muted/40 border border-border"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150';
+                        }}
+                      />
+                      <div>
+                        <span className="text-xs font-semibold text-white block">Image Ready</span>
+                        <span className="text-[11px] text-muted-foreground truncate max-w-[200px] sm:max-w-xs block font-mono">
+                          {formImage.startsWith('data:') ? 'Optimized WebP File' : formImage}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormImage('')}
+                      className="p-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-lg"
+                    >
+                      Remove
+                    </button>
                   </div>
                 )}
               </div>

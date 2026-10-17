@@ -280,10 +280,72 @@ app.get('/api/quotes', (req, res) => {
   res.json({ success: true, quotes });
 });
 
-app.get('/api/quiz', (req, res) => {
-  const quiz = readJson('quiz_questions.json', []);
-  res.json({ success: true, quiz });
+// 7. Image Upload Endpoint
+app.post('/api/upload', (req, res) => {
+  const { data, filename } = req.body;
+  if (!data) {
+    return res.status(400).json({ success: false, message: 'No image data provided.' });
+  }
+
+  // If it's already an external URL
+  if (typeof data === 'string' && (data.startsWith('http://') || data.startsWith('https://'))) {
+    return res.json({ success: true, url: data, message: 'Image URL verified.' });
+  }
+
+  try {
+    const matches = data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (matches && matches.length === 3) {
+      const mime = matches[1];
+      let ext = 'jpg';
+      if (mime.includes('png')) ext = 'png';
+      else if (mime.includes('webp')) ext = 'webp';
+      else if (mime.includes('gif')) ext = 'gif';
+
+      const safeName = `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+      const uploadsDir = path.join(__dirname, '../public/uploads');
+
+      try {
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const filePath = path.join(uploadsDir, safeName);
+        fs.writeFileSync(filePath, Buffer.from(matches[2], 'base64'));
+
+        const distUploads = path.join(__dirname, '../dist/uploads');
+        if (fs.existsSync(path.join(__dirname, '../dist'))) {
+          if (!fs.existsSync(distUploads)) fs.mkdirSync(distUploads, { recursive: true });
+          fs.writeFileSync(path.join(distUploads, safeName), Buffer.from(matches[2], 'base64'));
+        }
+
+        return res.json({
+          success: true,
+          url: `/uploads/${safeName}`,
+          filename: safeName,
+          message: 'Image uploaded to local storage successfully.',
+        });
+      } catch (fsErr) {
+        console.warn('Filesystem write not permitted, using data URI fallback:', fsErr);
+        return res.json({
+          success: true,
+          url: data,
+          message: 'Image stored as optimized data URI.',
+        });
+      }
+    }
+
+    res.json({ success: true, url: data, message: 'Image processed successfully.' });
+  } catch (err) {
+    console.error('Error in /api/upload:', err);
+    res.status(500).json({ success: false, message: 'Failed to process image.' });
+  }
 });
+
+// Serve uploaded assets
+const publicUploads = path.join(__dirname, '../public/uploads');
+if (!fs.existsSync(publicUploads)) {
+  fs.mkdirSync(publicUploads, { recursive: true });
+}
+app.use('/uploads', express.static(publicUploads));
 
 // Serve frontend in production
 const distPath = path.join(__dirname, '../dist');

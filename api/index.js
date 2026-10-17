@@ -261,9 +261,24 @@ app.get('/api/quotes', (req, res) => {
   res.json({ success: true, quotes });
 });
 
-app.get('/api/quiz', (req, res) => {
-  const quiz = readJson('quiz_questions.json', []);
-  res.json({ success: true, quiz });
+// 7. Image Upload Endpoint
+app.post('/api/upload', (req, res) => {
+  const { data, filename } = req.body;
+  if (!data) {
+    return res.status(400).json({ success: false, message: 'No image data provided.' });
+  }
+
+  // If already an external URL
+  if (typeof data === 'string' && (data.startsWith('http://') || data.startsWith('https://'))) {
+    return res.json({ success: true, url: data, message: 'Image URL verified.' });
+  }
+
+  // In serverless environment (Vercel), data URI is returned directly so it works instantly with zero setup
+  res.json({
+    success: true,
+    url: data,
+    message: 'Image processed as optimized data URI.',
+  });
 });
 
 export default app;
