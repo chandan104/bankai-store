@@ -1,0 +1,306 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Product, StoreSettings as IStoreSettings, StoreStats, QuizQuestion, AnimeQuote } from './types';
+import { Navbar } from './components/Navbar';
+import { Hero } from './components/Hero';
+import { CategoryCircles } from './components/CategoryCircles';
+import { PremiumCarousel } from './components/PremiumCarousel';
+import { ProductGrid } from './components/ProductGrid';
+import { CategoryShowcase } from './components/CategoryShowcase';
+import { QuotesSection } from './components/QuotesSection';
+import { QuizModal } from './components/QuizModal';
+import { Footer } from './components/Footer';
+import { BackToTop } from './components/BackToTop';
+import { AdminLoginModal } from './admin/AdminLoginModal';
+import { AdminLayout } from './admin/AdminLayout';
+import { Trophy, Sparkles } from 'lucide-react';
+
+// Fallback seed data (guarantees the site works instantly anywhere, including Vercel serverless cold starts)
+import initialProducts from '../data/products.json';
+import initialQuotes from '../data/anime_quotes.json';
+import initialQuiz from '../data/quiz_questions.json';
+
+const DEFAULT_SETTINGS: IStoreSettings = {
+  storeName: 'Bankai Store',
+  tagline: 'Premium Anime Collectibles & Merchandise',
+  whatsappNumber: '918413958014',
+  announcement: '⚡ Exclusive Anime Collectibles — 1-Click WhatsApp Ordering & Express Shipping Across India!',
+  currency: '₹',
+};
+
+export const App: React.FC = () => {
+  // Initialize with local cache or fallback seed data
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const cached = localStorage.getItem('bankai_products');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return initialProducts as Product[];
+  });
+
+  const [settings, setSettings] = useState<IStoreSettings>(() => {
+    try {
+      const cached = localStorage.getItem('bankai_settings');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+    return DEFAULT_SETTINGS;
+  });
+
+  const [stats, setStats] = useState<StoreStats | null>(null);
+  const [quotes, setQuotes] = useState<AnimeQuote[]>(initialQuotes as AnimeQuote[]);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>(initialQuiz as QuizQuestion[]);
+
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  // Modals state
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  // Admin authentication state
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('bankai_admin_token') !== null;
+  });
+  const [isAdminView, setIsAdminView] = useState<boolean>(() => {
+    return new URLSearchParams(window.location.search).get('admin') === 'true';
+  });
+
+  // Fetch live API data from server
+  const fetchData = async () => {
+    try {
+      const [resProd, resSet, resStats, resQuotes, resQuiz] = await Promise.all([
+        fetch('/api/products').then((r) => r.json()).catch(() => null),
+        fetch('/api/settings').then((r) => r.json()).catch(() => null),
+        fetch('/api/stats').then((r) => r.json()).catch(() => null),
+        fetch('/api/quotes').then((r) => r.json()).catch(() => null),
+        fetch('/api/quiz').then((r) => r.json()).catch(() => null),
+      ]);
+
+      if (resProd && resProd.products && resProd.products.length > 0) {
+        setProducts(resProd.products);
+        try {
+          localStorage.setItem('bankai_products', JSON.stringify(resProd.products));
+        } catch (e) {}
+      }
+      if (resSet && resSet.settings) {
+        setSettings(resSet.settings);
+        try {
+          localStorage.setItem('bankai_settings', JSON.stringify(resSet.settings));
+        } catch (e) {}
+      }
+      if (resStats && resStats.stats) {
+        setStats(resStats.stats);
+      }
+      if (resQuotes && resQuotes.quotes) {
+        setQuotes(resQuotes.quotes);
+      }
+      if (resQuiz && resQuiz.quiz) {
+        setQuizQuestions(resQuiz.quiz);
+      }
+    } catch (err) {
+      console.warn('API sync: using cached/seed data', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    // Check if ?admin=true is in URL
+    if (new URLSearchParams(window.location.search).get('admin') === 'true') {
+      if (!sessionStorage.getItem('bankai_admin_token')) {
+        setIsLoginModalOpen(true);
+      } else {
+        setIsAdminView(true);
+      }
+    }
+  }, []);
+
+  const categories = useMemo(() => {
+    return Array.from(new Set(products.map((p) => p.category))).filter(Boolean);
+  }, [products]);
+
+  const handleOpenAdmin = () => {
+    if (isAdminAuthenticated) {
+      setIsAdminView(true);
+    } else {
+      setIsLoginModalOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = (token: string) => {
+    sessionStorage.setItem('bankai_admin_token', token);
+    setIsAdminAuthenticated(true);
+    setIsAdminView(true);
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('bankai_admin_token');
+    setIsAdminAuthenticated(false);
+    setIsAdminView(false);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('admin');
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  const handleResetStore = async () => {
+    if (!confirm('Are you sure you want to restore the store to the default 50 anime collectibles?')) return;
+    try {
+      const res = await fetch('/api/products/reset', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        alert('Store reset successfully!');
+        fetchData();
+      }
+    } catch (err) {
+      // Local fallback reset
+      setProducts(initialProducts as Product[]);
+      localStorage.setItem('bankai_products', JSON.stringify(initialProducts));
+      alert('Store reset to default 50 products.');
+    }
+  };
+
+  const scrollToProducts = () => {
+    const el = document.getElementById('products');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // If in Admin Dashboard view
+  if (isAdminView && isAdminAuthenticated) {
+    return (
+      <AdminLayout
+        products={products}
+        stats={stats}
+        settings={settings}
+        onRefreshProducts={fetchData}
+        onUpdateSettings={(newSet) => {
+          setSettings(newSet);
+          localStorage.setItem('bankai_settings', JSON.stringify(newSet));
+        }}
+        onResetStore={handleResetStore}
+        onLogout={handleLogout}
+        onViewStore={() => setIsAdminView(false)}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col font-sans selection:bg-primary/30 selection:text-white">
+      {/* Navigation Header */}
+      <Navbar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSearchSubmit={scrollToProducts}
+        isAdmin={isAdminAuthenticated}
+        onOpenAdmin={handleOpenAdmin}
+        settings={settings}
+      />
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <Hero settings={settings} onExplore={scrollToProducts} />
+
+        {/* Shop by Category - Exact Glowing Circular Wheels matching Bankai Store */}
+        <CategoryCircles
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={(cat) => {
+            setSelectedCategory(cat);
+            scrollToProducts();
+          }}
+        />
+
+        {/* Exclusive / Premium Marquee Carousel */}
+        <PremiumCarousel
+          products={products}
+          settings={settings}
+          onOrderClick={(prod) => {
+            const msg = encodeURIComponent(
+              `Hello, I want to order:\n\nProduct: ${prod.name}\nPrice: ₹${prod.price}\n\nImage: ${prod.image}\n\nPlease confirm availability.`
+            );
+            window.open(`https://wa.me/${settings.whatsappNumber}?text=${msg}`, '_blank');
+          }}
+          onViewAllClick={scrollToProducts}
+        />
+
+        {/* Main Products Grid & Search/Filter */}
+        <ProductGrid
+          products={products}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          settings={settings}
+          onOrderLogged={fetchData}
+        />
+
+        {/* Browse by Category Section */}
+        <CategoryShowcase
+          products={products}
+          settings={settings}
+          onSelectCategory={(cat) => {
+            setSelectedCategory(cat);
+            scrollToProducts();
+          }}
+          onOrderLogged={fetchData}
+        />
+
+        {/* Anime Quotes Section */}
+        <QuotesSection quotes={quotes} />
+
+        {/* Anime Knowledge Quiz Banner */}
+        <section id="quiz" className="py-24 bg-card/20 border-t border-border/40 relative overflow-hidden scroll-mt-16">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
+
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                Otaku Knowledge Gauntlet
+              </span>
+            </div>
+
+            <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-4">
+              The Ultimate Anime Knowledge Quiz
+            </h2>
+
+            <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto mb-10 leading-relaxed">
+              Think you know your anime? Challenge yourself with our 20-question gauntlet ranging from classic shonen to hardcore trivia. Prove your otaku credentials!
+            </p>
+
+            <button
+              onClick={() => setIsQuizOpen(true)}
+              className="px-8 py-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base md:text-lg shadow-xl shadow-primary/25 hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-3"
+            >
+              <Trophy className="w-5 h-5" />
+              <span>Start The 20-Question Challenge</span>
+            </button>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <Footer settings={settings} />
+
+      {/* Floating Back To Top Button */}
+      <BackToTop />
+
+      {/* Quiz Modal */}
+      <QuizModal
+        isOpen={isQuizOpen}
+        onClose={() => setIsQuizOpen(false)}
+        questions={quizQuestions}
+      />
+
+      {/* Admin Login Modal */}
+      <AdminLoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    </div>
+  );
+};
+
+export default App;

@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 4%;
+  --foreground: 270 5% 96%;
+  --card: 270 8% 8%;
+  --card-foreground: 270 5% 96%;
+  --popover: 270 8% 8%;
+  --popover-foreground: 270 5% 96%;
+  --primary: 270 91% 65%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 270 30% 20%;
+  --secondary-foreground: 270 5% 96%;
+  --muted: 270 5% 15%;
+  --muted-foreground: 270 5% 65%;
+  --accent: 280 86% 70%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 270 5% 96%;
+  --border: 270 10% 15%;
+  --input: 270 10% 15%;
+  --ring: 270 91% 65%;
+  --radius: 0.75rem;
+  --quiz-correct: 142 71% 45%;
+  --quiz-incorrect: 0 84% 60%;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 9999px;
+  border: 2px solid hsl(var(--background));
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Pause animation on hover */
+.pause-on-hover:hover .animate-infinite-scroll {
+  animation-play-state: paused;
+}
+
+/* Glassmorphism & Neon Glow */
+.glass-panel {
+  background: rgba(18, 16, 26, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+.glow-purple {
+  box-shadow: 0 0 25px -5px rgba(168, 85, 247, 0.35);
+}
+
+.glow-purple-lg {
+  box-shadow: 0 0 50px -10px rgba(168, 85, 247, 0.45);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

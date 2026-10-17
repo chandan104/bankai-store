@@ -1,0 +1,424 @@
+[
+  {
+    "id": 1,
+    "name": "1:43 Scale Mustang Drift RC Car, 4x4 Drive, RGB Lights, Premium Remote Control",
+    "price": 1999,
+    "originalPrice": 2499,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0000.jpg"
+  },
+  {
+    "id": 5,
+    "name": "Shinchan Crawling Toy",
+    "price": 199,
+    "category": "Kids Toys",
+    "anime": "Shinchan",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/1787738720698_wslgkg_2_1.jpg"
+  },
+  {
+    "id": 79,
+    "name": "Shinchan Tricycle Toy for Kids & Gifting",
+    "price": 249,
+    "category": "Kids Toys",
+    "anime": "Shinchan",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0024.jpg"
+  },
+  {
+    "id": 80,
+    "name": "Pokemon Pikachu Bobblehead",
+    "price": 299,
+    "category": "Bobbleheads",
+    "anime": "Pokemon",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0035.jpg"
+  },
+  {
+    "id": 81,
+    "name": "Superman Bobblehead",
+    "price": 299,
+    "category": "Bobbleheads",
+    "anime": "DC Comics",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0034.jpg"
+  },
+  {
+    "id": 82,
+    "name": "Kaiju No. 8 Bobblehead",
+    "price": 299,
+    "category": "Bobbleheads",
+    "anime": "Kaiju No. 8",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0033.jpg"
+  },
+  {
+    "id": 83,
+    "name": "Goku Dragon Ball Z Bobblehead",
+    "price": 299,
+    "category": "Bobbleheads",
+    "anime": "Dragon Ball Z",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0032.jpg"
+  },
+  {
+    "id": 84,
+    "name": "Shinchan Bobblehead",
+    "price": 299,
+    "category": "Bobbleheads",
+    "anime": "Shinchan",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0031.jpg"
+  },
+  {
+    "id": 85,
+    "name": "Kung Fu Panda Bobblehead",
+    "price": 299,
+    "category": "Bobbleheads",
+    "anime": "Kung Fu Panda",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0030.jpg"
+  },
+  {
+    "id": 86,
+    "name": "Itachi Uchiha Naruto Bobblehead",
+    "price": 299,
+    "category": "Bobbleheads",
+    "anime": "Naruto",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0029.jpg"
+  },
+  {
+    "id": 88,
+    "name": "Shinchan String Toy",
+    "price": 169,
+    "category": "Kids Toys",
+    "anime": "Shinchan",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0028.jpg"
+  },
+  {
+    "id": 89,
+    "name": "BMW Drift RC Car 4x4 Mini 1:64 Scale, Yegao White Edition",
+    "price": 1199,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0027.jpg"
+  },
+  {
+    "id": 90,
+    "name": "BMW Drift RC Car 4x4 Mini 1:64 Scale, Yegao Black Edition",
+    "price": 1199,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0026.jpg"
+  },
+  {
+    "id": 91,
+    "name": "Formula 1 Diecast Car",
+    "price": 649,
+    "category": "Diecast Cars",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0025.jpg"
+  },
+  {
+    "id": 92,
+    "name": "Tanjiro Black Wooden Sword 104cm Premium",
+    "price": 1450,
+    "category": "Katanas",
+    "anime": "Demon Slayer",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0036.jpg"
+  },
+  {
+    "id": 93,
+    "name": "Tanjiro Red & Black Wooden Sword 104cm",
+    "price": 1450,
+    "category": "Katanas",
+    "anime": "Demon Slayer",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0039.jpg"
+  },
+  {
+    "id": 94,
+    "name": "Zoro White Wooden Sword 104cm",
+    "price": 1450,
+    "category": "Katanas",
+    "anime": "One Piece",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0038.jpg"
+  },
+  {
+    "id": 95,
+    "name": "Sanemi Wooden Sword 104cm",
+    "price": 1450,
+    "category": "Katanas",
+    "anime": "Demon Slayer",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0037.jpg"
+  },
+  {
+    "id": 96,
+    "name": "Zoro Wooden Sword 104cm",
+    "price": 1450,
+    "category": "Katanas",
+    "anime": "One Piece",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/zorowoodensword.jpeg"
+  },
+  {
+    "id": 97,
+    "name": "Bleach Ichigo Wooden Sword 104cm",
+    "price": 1450,
+    "category": "Katanas",
+    "anime": "Bleach",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260421-WA0012.jpg"
+  },
+  {
+    "id": 2,
+    "name": "1:18 Scale Rock Crawler RC Car, Metal Body, Smoke Feature, Type-C Charging, Off-Road Edition",
+    "price": 799,
+    "originalPrice": 1199,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0004.jpg"
+  },
+  {
+    "id": 3,
+    "name": "1:18 Scale Porsche Drift RC Car, 4x4 Drive, Multi-Function Remote, App Control, Black Edition",
+    "price": 1549,
+    "originalPrice": 1999,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0005.jpg"
+  },
+  {
+    "id": 11,
+    "name": "Shinchan Water Prank Toy",
+    "price": 299,
+    "category": "Kids Toys",
+    "anime": "Shinchan",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/1787738695029_7nvmhb_2_1.jpg"
+  },
+  {
+    "id": 4,
+    "name": "1:64 Scale BMW RC Car, 3 Speed Modes, App Control, Type-C Charging, Black Edition",
+    "price": 1099,
+    "originalPrice": 1399,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0006.jpg"
+  },
+  {
+    "id": 66,
+    "name": "Naruto Uzumaki 18cm Figure",
+    "price": 399,
+    "originalPrice": 599,
+    "category": "Anime Figures",
+    "anime": "Naruto",
+    "image": "http://madararealityquotes.com/wp-content/uploads/2026/05/WhatsApp-Image-2026-05-08-at-6.30.18-PM.jpeg",
+    "isTrending": false
+  },
+  {
+    "id": 67,
+    "name": "Bonney One Piece 21cm Big Figure",
+    "price": 799,
+    "originalPrice": 1099,
+    "category": "Anime Figures",
+    "anime": "One Piece",
+    "image": "http://madararealityquotes.com/wp-content/uploads/2026/05/WhatsApp-Image-2026-05-08-at-6.30.18-PM-2.jpeg",
+    "isTrending": false
+  },
+  {
+    "id": 68,
+    "name": "Zoro One Piece Sitting Premium Figure",
+    "price": 799,
+    "originalPrice": 1099,
+    "category": "Anime Figures",
+    "anime": "One Piece",
+    "image": "http://madararealityquotes.com/wp-content/uploads/2026/05/WhatsApp-Image-2026-05-08-at-6.30.18-PM-3.jpeg",
+    "isTrending": true
+  },
+  {
+    "id": 69,
+    "name": "Goku Dragon Ball Z Premium Action Figure 21cm",
+    "price": 699,
+    "originalPrice": 999,
+    "category": "Anime Figures",
+    "anime": "Dragon Ball Z",
+    "image": "http://madararealityquotes.com/wp-content/uploads/2026/05/WhatsApp-Image-2026-05-08-at-6.30.19-PM.jpeg",
+    "isTrending": true
+  },
+  {
+    "id": 6,
+    "name": "RC Fighter Jet, Unbreakable Material, Easy Handling, High Stability, Long Range Control",
+    "price": 1399,
+    "originalPrice": 1799,
+    "category": "RC Aircraft",
+    "anime": "Aviation",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0008.jpg"
+  },
+  {
+    "id": 12,
+    "name": "Katana Keychains",
+    "price": 149,
+    "category": "Keychains",
+    "anime": "Anime",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/1787738652451_t68ya8_2_1.jpg"
+  },
+  {
+    "id": 7,
+    "name": "1:18 Scale Toyota Trueno Drift RC Car, Type-C Charging, Easy Controls, High Performance Drifting",
+    "price": 1399,
+    "originalPrice": 1799,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0009.jpg"
+  },
+  {
+    "id": 8,
+    "name": "1:24 Scale Porsche Drift RC Car, Premium Design, 4x4 Drive, Easy Controls, Type-C Charging, Purple Edition",
+    "price": 1549,
+    "originalPrice": 1999,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0010.jpg"
+  },
+  {
+    "id": 9,
+    "name": "1:24 Scale Porsche Drift RC Car, Premium Design, 4x4 Drive, Easy Controls, Type-C Charging, Blue Edition",
+    "price": 1549,
+    "originalPrice": 1999,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0012.jpg"
+  },
+  {
+    "id": 14,
+    "name": "My Hero Academia Figure 20cm",
+    "price": 649,
+    "category": "Anime Figures",
+    "anime": "My Hero Academia",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/file_00000000fd8881faa2899d1355d3270f.png"
+  },
+  {
+    "id": 10,
+    "name": "1:24 Scale Porsche Drift RC Car, Premium Design, 4x4 Drive, Easy Controls, Type-C Charging, Grey Edition",
+    "price": 1549,
+    "originalPrice": 1999,
+    "category": "RC Car",
+    "anime": "Automotive",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0011.jpg"
+  },
+  {
+    "id": 13,
+    "name": "Dragon Ball Z Super Saiyan Goku Action Figure, Large Size, Premium Finish, Golden Hair Edition, Collector Display Model",
+    "price": 749,
+    "originalPrice": 999,
+    "category": "Figure",
+    "anime": "Dragon Ball Z",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/06/IMG-20260620-WA0015.jpg"
+  },
+  {
+    "id": 57,
+    "name": "Luffy Gear 5 Sitting Big Figure",
+    "price": 499,
+    "originalPrice": 799,
+    "category": "Anime Figures",
+    "anime": "One Piece",
+    "image": "http://madararealityquotes.com/wp-content/uploads/2026/05/WhatsApp-Image-2026-05-08-at-6.30.11-PM-1.jpeg",
+    "isTrending": true
+  },
+  {
+    "id": 58,
+    "name": "Zoro 21cm Standing Figure",
+    "price": 899,
+    "originalPrice": 1299,
+    "category": "Anime Figures",
+    "anime": "One Piece",
+    "image": "http://madararealityquotes.com/wp-content/uploads/2026/05/WhatsApp-Image-2026-05-08-at-6.30.13-PM-1.jpeg",
+    "isTrending": true
+  },
+  {
+    "id": 70,
+    "name": "Dragon Ball Z Pocket Watch",
+    "price": 250,
+    "category": "Pocket Watches",
+    "anime": "Dragon Ball Z",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260826-WA0009.jpg"
+  },
+  {
+    "id": 15,
+    "name": "Boa Hancock 18cm One Piece Figure",
+    "price": 599,
+    "category": "Anime Figures",
+    "anime": "One Piece",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/file_00000000a25481fabc9063852aba0b5b.png"
+  },
+  {
+    "id": 71,
+    "name": "Nico Robin One Piece Big Figure Holding Knife",
+    "price": 599,
+    "category": "Anime Figures",
+    "anime": "One Piece",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260826-WA0010.jpg"
+  },
+  {
+    "id": 72,
+    "name": "Death Note Pocket Watch",
+    "price": 250,
+    "category": "Pocket Watches",
+    "anime": "Death Note",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260826-WA0011.jpg"
+  },
+  {
+    "id": 73,
+    "name": "Attack on Titan Pocket Watch",
+    "price": 250,
+    "category": "Pocket Watches",
+    "anime": "Attack on Titan",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260826-WA0012.jpg"
+  },
+  {
+    "id": 16,
+    "name": "Madara Uchiha 20cm Figure",
+    "price": 599,
+    "category": "Anime Figures",
+    "anime": "Naruto",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/file_00000000f94081fa95d9e9c2f82d60b0.png"
+  },
+  {
+    "id": 74,
+    "name": "One Piece Pocket Watch",
+    "price": 250,
+    "category": "Pocket Watches",
+    "anime": "One Piece",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260826-WA0013.jpg"
+  },
+  {
+    "id": 75,
+    "name": "Naruto Pocket Watch",
+    "price": 250,
+    "category": "Pocket Watches",
+    "anime": "Naruto",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260826-WA0014.jpg"
+  },
+  {
+    "id": 76,
+    "name": "Thousand Sunny One Piece in Glass Box",
+    "price": 499,
+    "category": "Anime Figures",
+    "anime": "One Piece",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260826-WA0016.jpg"
+  },
+  {
+    "id": 17,
+    "name": "My Hero Academia Figure 20cm",
+    "price": 649,
+    "category": "Anime Figures",
+    "anime": "My Hero Academia",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/file_00000000058481f8ba5a79d3402ea1cb.png"
+  },
+  {
+    "id": 77,
+    "name": "One Piece Wanted Straw Hat Crew Posters - 10 Pcs Set",
+    "price": 300,
+    "category": "Posters",
+    "anime": "One Piece",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260827-WA0023.jpg"
+  },
+  {
+    "id": 18,
+    "name": "Luffy One Piece Big Premium Quality Figure",
+    "price": 799,
+    "category": "Anime Figures",
+    "anime": "One Piece",
+    "image": "https://assets.bankaistore.store/wp-content/uploads/2026/08/file_00000000f86081fa8bceda713271b723.png"
+  }
+]

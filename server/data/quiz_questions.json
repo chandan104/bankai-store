@@ -1,0 +1,245 @@
+[
+  {
+    "id": 1,
+    "difficulty": "easy",
+    "question": "What is Naruto's signature jutsu?",
+    "options": [
+      "Rasengan",
+      "Chidori",
+      "Rasengan Shuriken",
+      "Shadow Clone"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 2,
+    "difficulty": "easy",
+    "question": "What is Luffy's dream in One Piece?",
+    "options": [
+      "Become King of the Pirates",
+      "Find the One Piece",
+      "Become the strongest",
+      "Explore the world"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 3,
+    "difficulty": "easy",
+    "question": "What is Tanjiro's main goal in Demon Slayer?",
+    "options": [
+      "Turn Nezuko back into a human",
+      "Become a Hashira",
+      "Defeat Muzan",
+      "Master all forms"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 4,
+    "difficulty": "medium",
+    "question": "Who is the main antagonist in Attack on Titan?",
+    "options": [
+      "Eren Yeager",
+      "Reiner Braun",
+      "Bertholdt Hoover",
+      "The Colossal Titan"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 5,
+    "difficulty": "medium",
+    "question": "What is the name of Gojo's technique in Jujutsu Kaisen?",
+    "options": [
+      "Limitless",
+      "Infinity",
+      "Domain Expansion",
+      "Cursed Technique"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 6,
+    "difficulty": "medium",
+    "question": "How many forms does Tanjiro master in Demon Slayer?",
+    "options": [
+      "13 forms",
+      "10 forms",
+      "15 forms",
+      "9 forms"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 7,
+    "difficulty": "medium",
+    "question": "What is Goku's race in Dragon Ball?",
+    "options": [
+      "Saiyan",
+      "Human",
+      "Namekian",
+      "Android"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 8,
+    "difficulty": "medium",
+    "question": "Who is the captain of the Survey Corps in Attack on Titan?",
+    "options": [
+      "Erwin Smith",
+      "Levi Ackerman",
+      "Hange Zoe",
+      "Mike Zacharias"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 9,
+    "difficulty": "medium",
+    "question": "What is Yuji's cursed object in Jujutsu Kaisen?",
+    "options": [
+      "Sukuna's Finger",
+      "Sukuna's Toe",
+      "A cursed ring",
+      "A cursed necklace"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 10,
+    "difficulty": "medium",
+    "question": "What is the name of Luffy's crew?",
+    "options": [
+      "Straw Hat Pirates",
+      "Pirate Alliance",
+      "Mugiwara Crew",
+      "East Blue Pirates"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 11,
+    "difficulty": "hard",
+    "question": "What is the name of Naruto's Nine-Tailed Beast?",
+    "options": [
+      "Kurama",
+      "Shukaku",
+      "Gyuki",
+      "Son Goku"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 12,
+    "difficulty": "hard",
+    "question": "Who is the true villain behind the scenes in Naruto?",
+    "options": [
+      "Black Zetsu",
+      "Madara Uchiha",
+      "Obito Uchiha",
+      "Kabuto Yakushi"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 13,
+    "difficulty": "hard",
+    "question": "What is the name of the organization hunting Demon Slayers?",
+    "options": [
+      "Muzan's Demon Army",
+      "Twelve Kizuki",
+      "Demon Corps",
+      "Upper Moons"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 14,
+    "difficulty": "hard",
+    "question": "How many Titans has Eren transformed into?",
+    "options": [
+      "Multiple/Colossal",
+      "Armored",
+      "Beast",
+      "3 types",
+      "5 types",
+      "2 types",
+      "4 types"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "id": 15,
+    "difficulty": "hard",
+    "question": "What is Sukuna's true form called in Jujutsu Kaisen?",
+    "options": [
+      "King of Curses",
+      "Curse King",
+      "True Curse",
+      "Demon King"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 16,
+    "difficulty": "hard",
+    "question": "Who is the strongest swordsman in One Piece?",
+    "options": [
+      "Mihawk",
+      "Zoro",
+      "Shanks",
+      "Roronoa"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 17,
+    "difficulty": "hard",
+    "question": "What is the name of the Demon King in Demon Slayer?",
+    "options": [
+      "Muzan Kibutsuji",
+      "Muzan Demon",
+      "Kibutsuji",
+      "Demon Lord Muzan"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 18,
+    "difficulty": "hard",
+    "question": "What is the founding Titan's power in Attack on Titan?",
+    "options": [
+      "Control all Titans",
+      "Create Titans",
+      "Destroy Titans",
+      "Communicate with Titans"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 19,
+    "difficulty": "hard",
+    "question": "How many fingers does Sukuna have in Jujutsu Kaisen?",
+    "options": [
+      "20",
+      "10",
+      "15",
+      "4"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "id": 20,
+    "difficulty": "hard",
+    "question": "What is Goku's signature technique in Dragon Ball?",
+    "options": [
+      "Kamehameha",
+      "Kaioken",
+      "Spirit Bomb",
+      "Genki Dama"
+    ],
+    "correctIndex": 0
+  }
+]

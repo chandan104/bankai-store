@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "character": "Satoru Gojo",
+    "anime": "Jujutsu Kaisen",
+    "text": "Throughout Heaven and Earth, I alone am the honored one."
+  },
+  {
+    "id": 2,
+    "character": "Madara Uchiha",
+    "anime": "Naruto Shippuden",
+    "text": "Wake up to reality! Nothing ever goes as planned in this accursed world. The longer you live, the more you realize that in this reality, only pain, suffering, and futility exist. In this world, wherever there is light, there are also shadows. As long as the concept of winners exists, there must also be losers. The selfish desire of wanting to maintain peace causes wars, and hatred is born to protect love."
+  },
+  {
+    "id": 3,
+    "character": "Violet Evergarden",
+    "anime": "Violet Evergarden",
+    "text": "No letter that could be sent deserves to go undelivered."
+  },
+  {
+    "id": 4,
+    "character": "Edward Elric",
+    "anime": "Fullmetal Alchemist: Brotherhood",
+    "text": "There's no such thing as a painless lesson—they just don't exist. Sacrifices are necessary. You can't gain anything without losing something first. Although if you can endure that pain and walk away from it, you'll find that you now have a heart strong enough to overcome any obstacle. Yeah... a heart made Fullmetal."
+  },
+  {
+    "id": 5,
+    "character": "Sung Jin Woo",
+    "anime": "Solo Leveling",
+    "text": "They gave me that nickname because I was too weak. I was looked down upon because I was too weak. I also felt useless. As long as I'm strong enough.. One with overwhelming power can naturally remain undefeated. The weak are powerless before the strong. The weak can only stand still, trembling in fear. People are looked down upon because they are weak. Even if they're knowledgeable, smart, or considerate, before the strong, they will be betrayed! Gentleness is meaningless. So I must become stronger. That's why I came here!"
+  },
+  {
+    "id": 6,
+    "character": "Satoru Gojo",
+    "anime": "Jujutsu Kaisen 0",
+    "text": "Love is the most twisted curse of all."
+  },
+  {
+    "id": 7,
+    "character": "Levi Ackerman",
+    "anime": "Attack on Titan",
+    "text": "The only thing we're allowed to do is believe that we won't regret the choice we made."
+  },
+  {
+    "id": 8,
+    "character": "Pain (Nagato)",
+    "anime": "Naruto Shippuden",
+    "text": "Feel pain, contemplate pain, accept pain, know pain. Those who do not know pain will never understand true peace. I will never forget the pain that Yahiko suffered. And now... the world shall know pain. Almighty Push!"
+  },
+  {
+    "id": 9,
+    "character": "Itachi Uchiha",
+    "anime": "Naruto Shippuden",
+    "text": "People live their lives bound by what they accept as correct and true. That is how they define 'reality.' But what does it mean to be 'correct' or 'true'? Merely vague concepts... their 'reality' may all be a mirage. Can we consider them to simply be living in their own world, shaped by their beliefs?"
+  },
+  {
+    "id": 10,
+    "character": "Erwin Smith",
+    "anime": "Attack on Titan",
+    "text": "My soldiers do not buckle or yield when faced with the cruelty of this world! My soldiers push forward! My soldiers scream out! My soldiers rage!"
+  }
+]
