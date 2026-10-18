@@ -12,6 +12,10 @@ interface AdminLayoutProps {
   stats: StoreStats | null;
   settings: IStoreSettings;
   onRefreshProducts: () => void;
+  onAddProduct?: (product: Product) => void;
+  onUpdateProduct?: (product: Product) => void;
+  onDeleteProduct?: (id: number | string) => void;
+  onAddBatch?: (batch: Partial<Product>[]) => void;
   onUpdateSettings: (newSettings: IStoreSettings) => void;
   onResetStore: () => void;
   onLogout: () => void;
@@ -23,6 +27,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   stats,
   settings,
   onRefreshProducts,
+  onAddProduct,
+  onUpdateProduct,
+  onDeleteProduct,
+  onAddBatch,
   onUpdateSettings,
   onResetStore,
   onLogout,
@@ -133,6 +141,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             products={products}
             settings={settings}
             onRefresh={onRefreshProducts}
+            onAddProduct={onAddProduct}
+            onUpdateProduct={onUpdateProduct}
+            onDeleteProduct={onDeleteProduct}
           />
         )}
 
@@ -142,6 +153,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               onRefreshProducts();
               setActiveTab('products');
             }}
+            onAddBatch={onAddBatch}
           />
         )}
 

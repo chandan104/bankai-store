@@ -32,7 +32,10 @@ export const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const cached = localStorage.getItem('bankai_products');
-      if (cached) return JSON.parse(cached);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {}
     return initialProducts as Product[];
   });
@@ -65,7 +68,7 @@ export const App: React.FC = () => {
     return new URLSearchParams(window.location.search).get('admin') === 'true';
   });
 
-  // Fetch live API data from server
+  // Fetch live API data from server with smart persistence merge
   const fetchData = async () => {
     try {
       const [resProd, resSet, resStats, resQuotes, resQuiz] = await Promise.all([
@@ -76,18 +79,28 @@ export const App: React.FC = () => {
         fetch('/api/quiz').then((r) => r.json()).catch(() => null),
       ]);
 
-      if (resProd && resProd.products && resProd.products.length > 0) {
-        setProducts(resProd.products);
-        try {
-          localStorage.setItem('bankai_products', JSON.stringify(resProd.products));
-        } catch (e) {}
+      if (resProd && resProd.products && Array.isArray(resProd.products)) {
+        setProducts((prev) => {
+          const serverMap = new Map(resProd.products.map((p: Product) => [String(p.id), p]));
+          // Retain custom items added by admin locally (timestamp ID > 10 chars)
+          const localOnly = prev.filter(
+            (p) => String(p.id).length > 10 && !serverMap.has(String(p.id))
+          );
+          const merged = [...localOnly, ...resProd.products];
+          try {
+            localStorage.setItem('bankai_products', JSON.stringify(merged));
+          } catch (e) {}
+          return merged;
+        });
       }
+
       if (resSet && resSet.settings) {
         setSettings(resSet.settings);
         try {
           localStorage.setItem('bankai_settings', JSON.stringify(resSet.settings));
         } catch (e) {}
       }
+
       if (resStats && resStats.stats) {
         setStats(resStats.stats);
       }
@@ -119,6 +132,59 @@ export const App: React.FC = () => {
     return Array.from(new Set(products.map((p) => p.category))).filter(Boolean);
   }, [products]);
 
+  // Direct state updaters for 0ms lag persistence
+  const handleAddProduct = (newProd: Product) => {
+    setProducts((prev) => {
+      const updated = [newProd, ...prev.filter((p) => String(p.id) !== String(newProd.id))];
+      try {
+        localStorage.setItem('bankai_products', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const handleUpdateProduct = (updatedProd: Product) => {
+    setProducts((prev) => {
+      const updated = prev.map((p) => (String(p.id) === String(updatedProd.id) ? updatedProd : p));
+      try {
+        localStorage.setItem('bankai_products', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const handleDeleteProduct = (id: number | string) => {
+    setProducts((prev) => {
+      const updated = prev.filter((p) => String(p.id) !== String(id));
+      try {
+        localStorage.setItem('bankai_products', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const handleAddBatch = (batchItems: Partial<Product>[]) => {
+    setProducts((prev) => {
+      const formatted = batchItems.map((b, idx) => ({
+        id: b.id || Date.now() + idx,
+        name: b.name || 'Anime Collectible',
+        price: b.price || 999,
+        originalPrice: b.originalPrice,
+        category: b.category || 'Anime Figures',
+        anime: b.anime || 'Anime',
+        image: b.image || '',
+        isTrending: Boolean(b.isTrending),
+        stockStatus: b.stockStatus || 'In Stock',
+        createdAt: new Date().toISOString(),
+      })) as Product[];
+      const updated = [...formatted, ...prev];
+      try {
+        localStorage.setItem('bankai_products', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
   const handleOpenAdmin = () => {
     if (isAdminAuthenticated) {
       setIsAdminView(true);
@@ -148,8 +214,9 @@ export const App: React.FC = () => {
       const res = await fetch('/api/products/reset', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
+        setProducts(initialProducts as Product[]);
+        localStorage.setItem('bankai_products', JSON.stringify(initialProducts));
         alert('Store reset successfully!');
-        fetchData();
       }
     } catch (err) {
       // Local fallback reset
@@ -174,6 +241,10 @@ export const App: React.FC = () => {
         stats={stats}
         settings={settings}
         onRefreshProducts={fetchData}
+        onAddProduct={handleAddProduct}
+        onUpdateProduct={handleUpdateProduct}
+        onDeleteProduct={handleDeleteProduct}
+        onAddBatch={handleAddBatch}
         onUpdateSettings={(newSet) => {
           setSettings(newSet);
           localStorage.setItem('bankai_settings', JSON.stringify(newSet));
@@ -211,20 +282,20 @@ export const App: React.FC = () => {
           }}
         />
 
-        {/* Exclusive / Premium Marquee Carousel */}
+        {/* Exclusive Trending Collectibles Carousel */}
         <PremiumCarousel
           products={products}
           settings={settings}
-          onOrderClick={(prod) => {
-            const msg = encodeURIComponent(
-              `Hello, I want to order:\n\nProduct: ${prod.name}\nPrice: ₹${prod.price}\n\nImage: ${prod.image}\n\nPlease confirm availability.`
+          onOrderClick={(p) => {
+            const text = encodeURIComponent(
+              `Hi Bankai Store, I would like to order: ${p.name} (Price: ${settings.currency}${p.price}).`
             );
-            window.open(`https://wa.me/${settings.whatsappNumber}?text=${msg}`, '_blank');
+            window.open(`https://wa.me/${settings.whatsappNumber}?text=${text}`, '_blank');
           }}
           onViewAllClick={scrollToProducts}
         />
 
-        {/* Main Products Grid & Search/Filter */}
+        {/* Main Product Catalog Grid with real-time filters */}
         <ProductGrid
           products={products}
           selectedCategory={selectedCategory}
@@ -235,7 +306,7 @@ export const App: React.FC = () => {
           onOrderLogged={fetchData}
         />
 
-        {/* Browse by Category Section */}
+        {/* Category Showcase Section */}
         <CategoryShowcase
           products={products}
           settings={settings}
@@ -246,7 +317,7 @@ export const App: React.FC = () => {
           onOrderLogged={fetchData}
         />
 
-        {/* Anime Quotes Section */}
+        {/* Anime Quotes of the Masters Section */}
         <QuotesSection quotes={quotes} />
 
         {/* Anime Knowledge Quiz Banner */}
