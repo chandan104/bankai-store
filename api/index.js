@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+
+// Bundled seed datasets (Guaranteed to be bundled by Vercel NFT)
+const seedProducts = require('../data/products.json');
+const seedQuotes = require('../data/anime_quotes.json');
+const seedQuiz = require('../data/quiz_questions.json');
 
 const app = express();
 
@@ -13,7 +15,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // In-memory cache for serverless environment
-let cachedProducts = null;
+let cachedProducts = [...seedProducts];
 let cachedOrders = [];
 let cachedSettings = {
   storeName: 'Bankai Store',
@@ -24,48 +26,16 @@ let cachedSettings = {
   currency: '₹',
 };
 
-const getSeedPath = (filename) => {
-  const possiblePaths = [
-    path.join(__dirname, '../server/data', filename),
-    path.join(__dirname, '../data', filename),
-    path.join(process.cwd(), 'server/data', filename),
-    path.join(process.cwd(), 'data', filename),
-  ];
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) return p;
-  }
-  return null;
-};
-
-const readJson = (filename, defaultValue = []) => {
-  const p = getSeedPath(filename);
-  if (p) {
-    try {
-      return JSON.parse(fs.readFileSync(p, 'utf8'));
-    } catch (e) {
-      console.error(`Error reading ${filename}:`, e);
-    }
-  }
-  return defaultValue;
-};
-
-// Initialize in-memory cache
-const initCache = () => {
-  if (!cachedProducts) {
-    cachedProducts = readJson('products.json', []);
-  }
-};
+const router = express.Router();
 
 // --- Endpoints ---
 
 // 1. Products
-app.get('/api/products', (req, res) => {
-  initCache();
+router.get('/products', (req, res) => {
   res.json({ success: true, count: cachedProducts.length, products: cachedProducts });
 });
 
-app.post('/api/products', (req, res) => {
-  initCache();
+router.post('/products', (req, res) => {
   const { name, price, originalPrice, category, anime, image, isTrending, stockStatus } = req.body;
   if (!name || !price || !category || !anime || !image) {
     return res.status(400).json({ success: false, message: 'All required fields must be filled.' });
@@ -88,8 +58,7 @@ app.post('/api/products', (req, res) => {
   res.status(201).json({ success: true, product: newProduct });
 });
 
-app.post('/api/products/batch', (req, res) => {
-  initCache();
+router.post('/products/batch', (req, res) => {
   const { items } = req.body;
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ success: false, message: 'Batch items must be a non-empty array.' });
@@ -112,8 +81,7 @@ app.post('/api/products/batch', (req, res) => {
   res.status(201).json({ success: true, addedCount: formatted.length, products: cachedProducts });
 });
 
-app.put('/api/products/:id', (req, res) => {
-  initCache();
+router.put('/products/:id', (req, res) => {
   const id = Number(req.params.id) || req.params.id;
   const index = cachedProducts.findIndex((p) => p.id === id || String(p.id) === String(id));
 
@@ -135,8 +103,7 @@ app.put('/api/products/:id', (req, res) => {
   res.json({ success: true, product: updated });
 });
 
-app.delete('/api/products/:id', (req, res) => {
-  initCache();
+router.delete('/products/:id', (req, res) => {
   const id = Number(req.params.id) || req.params.id;
   const initialLength = cachedProducts.length;
   cachedProducts = cachedProducts.filter((p) => p.id !== id && String(p.id) !== String(id));
@@ -148,17 +115,17 @@ app.delete('/api/products/:id', (req, res) => {
   res.json({ success: true, message: 'Product deleted successfully.' });
 });
 
-app.post('/api/products/reset', (req, res) => {
-  cachedProducts = readJson('products.json', []);
+router.post('/products/reset', (req, res) => {
+  cachedProducts = [...seedProducts];
   res.json({ success: true, message: 'Store reset to default 50 products.', count: cachedProducts.length });
 });
 
 // 2. Orders & Leads CRM
-app.get('/api/orders', (req, res) => {
+router.get('/orders', (req, res) => {
   res.json({ success: true, count: cachedOrders.length, orders: cachedOrders });
 });
 
-app.post('/api/orders', (req, res) => {
+router.post('/orders', (req, res) => {
   const { productId, productName, productPrice, productImage, customerPhone, customerName } = req.body;
   const newOrder = {
     id: `ORD-${Date.now().toString().slice(-6)}`,
@@ -177,7 +144,7 @@ app.post('/api/orders', (req, res) => {
   res.status(201).json({ success: true, order: newOrder });
 });
 
-app.put('/api/orders/:id', (req, res) => {
+router.put('/orders/:id', (req, res) => {
   const { id } = req.params;
   const index = cachedOrders.findIndex((o) => o.id === id);
 
@@ -195,19 +162,19 @@ app.put('/api/orders/:id', (req, res) => {
   res.json({ success: true, order: cachedOrders[index] });
 });
 
-app.delete('/api/orders/:id', (req, res) => {
+router.delete('/orders/:id', (req, res) => {
   const { id } = req.params;
   cachedOrders = cachedOrders.filter((o) => o.id !== id);
   res.json({ success: true, message: 'Order inquiry deleted.' });
 });
 
 // 3. Settings
-app.get('/api/settings', (req, res) => {
+router.get('/settings', (req, res) => {
   const { adminPassword, ...publicSettings } = cachedSettings;
   res.json({ success: true, settings: publicSettings });
 });
 
-app.put('/api/settings', (req, res) => {
+router.put('/settings', (req, res) => {
   cachedSettings = {
     ...cachedSettings,
     ...req.body,
@@ -217,7 +184,7 @@ app.put('/api/settings', (req, res) => {
 });
 
 // 4. Admin Auth
-app.post('/api/auth/login', (req, res) => {
+router.post('/auth/login', (req, res) => {
   const { password } = req.body;
   const validPassword = cachedSettings.adminPassword || 'Firstproject';
 
@@ -233,8 +200,7 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // 5. Stats
-app.get('/api/stats', (req, res) => {
-  initCache();
+router.get('/stats', (req, res) => {
   const categories = [...new Set(cachedProducts.map((p) => p.category))];
   const animes = [...new Set(cachedProducts.map((p) => p.anime))];
   const totalCatalogValue = cachedProducts.reduce((acc, p) => acc + (p.price || 0), 0);
@@ -255,30 +221,31 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
-// 6. Quotes & Quiz
-app.get('/api/quotes', (req, res) => {
-  const quotes = readJson('anime_quotes.json', []);
-  res.json({ success: true, quotes });
+// 6. Content Data (Quotes & Quiz)
+router.get('/quotes', (req, res) => {
+  res.json({ success: true, quotes: seedQuotes });
+});
+
+router.get('/quiz', (req, res) => {
+  res.json({ success: true, quiz: seedQuiz });
 });
 
 // 7. Image Upload Endpoint
-app.post('/api/upload', (req, res) => {
-  const { data, filename } = req.body;
+router.post('/upload', (req, res) => {
+  const { data } = req.body;
   if (!data) {
     return res.status(400).json({ success: false, message: 'No image data provided.' });
   }
 
-  // If already an external URL
-  if (typeof data === 'string' && (data.startsWith('http://') || data.startsWith('https://'))) {
-    return res.json({ success: true, url: data, message: 'Image URL verified.' });
-  }
-
-  // In serverless environment (Vercel), data URI is returned directly so it works instantly with zero setup
   res.json({
     success: true,
     url: data,
     message: 'Image processed as optimized data URI.',
   });
 });
+
+// Support both /api/* and direct /* routing from Vercel rewrites
+app.use('/api', router);
+app.use('/', router);
 
 export default app;
