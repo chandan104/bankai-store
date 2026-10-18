@@ -57,6 +57,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     setTimeout(() => setOrdering(false), 1500);
   };
 
+  const [imgSrc, setImgSrc] = useState<string>(product.image);
+
+  React.useEffect(() => {
+    setImgSrc(product.image);
+  }, [product.image]);
+
+  const handleImageError = () => {
+    if (imgSrc && imgSrc.startsWith('http') && !imgSrc.includes('/api/proxy-image')) {
+      setImgSrc(`/api/proxy-image?url=${encodeURIComponent(product.image)}`);
+    } else {
+      setImgSrc('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&auto=format&fit=crop&q=60');
+    }
+  };
+
   return (
     <div className="group overflow-hidden rounded-2xl border border-border/80 bg-card hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full">
       {/* Product Image */}
@@ -81,9 +95,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         <img
-          src={product.image}
+          src={imgSrc}
           alt={product.name}
           loading="lazy"
+          onError={handleImageError}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
       </div>

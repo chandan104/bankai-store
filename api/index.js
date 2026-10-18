@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import https from 'https';
+import http from 'http';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -152,38 +154,27 @@ router.put('/orders/:id', (req, res) => {
     return res.status(404).json({ success: false, message: 'Order not found.' });
   }
 
-  cachedOrders[index] = {
-    ...cachedOrders[index],
-    ...req.body,
-    id: cachedOrders[index].id,
-    updatedAt: new Date().toISOString(),
-  };
-
+  cachedOrders[index] = { ...cachedOrders[index], ...req.body };
   res.json({ success: true, order: cachedOrders[index] });
 });
 
 router.delete('/orders/:id', (req, res) => {
   const { id } = req.params;
   cachedOrders = cachedOrders.filter((o) => o.id !== id);
-  res.json({ success: true, message: 'Order inquiry deleted.' });
+  res.json({ success: true, message: 'Order deleted.' });
 });
 
 // 3. Settings
 router.get('/settings', (req, res) => {
-  const { adminPassword, ...publicSettings } = cachedSettings;
-  res.json({ success: true, settings: publicSettings });
+  res.json({ success: true, settings: cachedSettings });
 });
 
 router.put('/settings', (req, res) => {
-  cachedSettings = {
-    ...cachedSettings,
-    ...req.body,
-  };
-  const { adminPassword, ...publicSettings } = cachedSettings;
-  res.json({ success: true, settings: publicSettings });
+  cachedSettings = { ...cachedSettings, ...req.body };
+  res.json({ success: true, settings: cachedSettings });
 });
 
-// 4. Admin Auth
+// 4. Authentication
 router.post('/auth/login', (req, res) => {
   const { password } = req.body;
   const validPassword = cachedSettings.adminPassword || 'Firstproject';
@@ -242,6 +233,45 @@ router.post('/upload', (req, res) => {
     url: data,
     message: 'Image processed as optimized data URI.',
   });
+});
+
+// 8. Image Proxy Endpoint (bypasses any ISP/DNS cache issues for assets)
+router.get('/proxy-image', (req, res) => {
+  const imageUrl = req.query.url;
+  if (!imageUrl) {
+    return res.status(400).send('No image URL provided');
+  }
+
+  try {
+    const urlObj = new URL(imageUrl);
+    const isAssetsBankai = urlObj.hostname === 'assets.bankaistore.store';
+
+    const options = {
+      host: isAssetsBankai ? '195.35.33.201' : urlObj.hostname,
+      port: urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
+      path: urlObj.pathname + urlObj.search,
+      servername: urlObj.hostname,
+      headers: {
+        host: urlObj.hostname,
+        'User-Agent': 'BankaiStore/1.0',
+      },
+    };
+
+    const protocol = urlObj.protocol === 'https:' ? https : http;
+    const proxyReq = protocol.request(options, (proxyRes) => {
+      res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', () => {
+      res.status(502).send('Error loading image');
+    });
+
+    proxyReq.end();
+  } catch (err) {
+    res.status(400).send('Invalid URL');
+  }
 });
 
 // Support both /api/* and direct /* routing from Vercel rewrites

@@ -482,8 +482,11 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
                           alt={p.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              'https://assets.bankaistore.store/wp-content/uploads/2026/08/IMG-20260826-WA0010.jpg';
+                            const target = e.currentTarget;
+                            if (!target.dataset.fallback && target.src.startsWith('http')) {
+                              target.dataset.fallback = 'true';
+                              target.src = `/api/proxy-image?url=${encodeURIComponent(p.image)}`;
+                            }
                           }}
                         />
                       </div>

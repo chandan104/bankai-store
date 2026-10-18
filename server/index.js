@@ -340,6 +340,45 @@ app.post('/api/upload', (req, res) => {
   }
 });
 
+// 8. Image Proxy Endpoint
+app.get('/api/proxy-image', (req, res) => {
+  const imageUrl = req.query.url;
+  if (!imageUrl) {
+    return res.status(400).send('No image URL provided');
+  }
+
+  try {
+    const urlObj = new URL(imageUrl);
+    const isAssetsBankai = urlObj.hostname === 'assets.bankaistore.store';
+
+    const options = {
+      host: isAssetsBankai ? '195.35.33.201' : urlObj.hostname,
+      port: urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
+      path: urlObj.pathname + urlObj.search,
+      servername: urlObj.hostname,
+      headers: {
+        host: urlObj.hostname,
+        'User-Agent': 'BankaiStore/1.0',
+      },
+    };
+
+    const protocol = urlObj.protocol === 'https:' ? require('https') : require('http');
+    const proxyReq = protocol.request(options, (proxyRes) => {
+      res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', () => {
+      res.status(502).send('Error loading image');
+    });
+
+    proxyReq.end();
+  } catch (err) {
+    res.status(400).send('Invalid URL');
+  }
+});
+
 // Serve uploaded assets
 const publicUploads = path.join(__dirname, '../public/uploads');
 if (!fs.existsSync(publicUploads)) {

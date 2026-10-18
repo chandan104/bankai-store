@@ -92,6 +92,13 @@ export const PremiumCarousel: React.FC<PremiumCarouselProps> = ({
                     src={item.image}
                     alt={item.name}
                     loading="lazy"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.dataset.fallback && target.src.startsWith('http')) {
+                        target.dataset.fallback = 'true';
+                        target.src = `/api/proxy-image?url=${encodeURIComponent(item.image)}`;
+                      }
+                    }}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
