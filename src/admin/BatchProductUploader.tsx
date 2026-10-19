@@ -168,6 +168,7 @@ export const BatchProductUploader: React.FC<BatchProductUploaderProps> = ({ onSu
       return;
     }
 
+    if (loading) return;
     setLoading(true);
     setMessage(null);
 

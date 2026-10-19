@@ -38,23 +38,41 @@ router.get('/products', (req, res) => {
 });
 
 router.post('/products', (req, res) => {
-  const { name, price, originalPrice, category, anime, image, isTrending, stockStatus } = req.body;
+  const { id, name, price, originalPrice, category, anime, image, isTrending, stockStatus } = req.body;
   if (!name || !price || !category || !anime || !image) {
     return res.status(400).json({ success: false, message: 'All required fields must be filled.' });
   }
 
+  const assignedId = id ? (Number(id) || id) : Date.now();
+  const trimmedName = String(name).trim();
+  const trimmedCategory = String(category).trim();
+
   const newProduct = {
-    id: Date.now(),
-    name: String(name).trim(),
+    id: assignedId,
+    name: trimmedName,
     price: Number(price),
     originalPrice: originalPrice ? Number(originalPrice) : undefined,
-    category: String(category).trim(),
+    category: trimmedCategory,
     anime: String(anime).trim(),
     image: String(image).trim(),
     isTrending: Boolean(isTrending),
     stockStatus: stockStatus || 'In Stock',
     createdAt: new Date().toISOString(),
   };
+
+  const existingIdx = cachedProducts.findIndex(
+    (p) =>
+      String(p.id) === String(assignedId) ||
+      (p.name &&
+        p.category &&
+        p.name.trim().toLowerCase() === trimmedName.toLowerCase() &&
+        p.category.trim().toLowerCase() === trimmedCategory.toLowerCase())
+  );
+
+  if (existingIdx !== -1) {
+    cachedProducts[existingIdx] = { ...cachedProducts[existingIdx], ...newProduct };
+    return res.status(200).json({ success: true, product: cachedProducts[existingIdx] });
+  }
 
   cachedProducts.unshift(newProduct);
   res.status(201).json({ success: true, product: newProduct });
@@ -67,7 +85,7 @@ router.post('/products/batch', (req, res) => {
   }
 
   const formatted = items.map((b, idx) => ({
-    id: Date.now() + idx,
+    id: b.id || Date.now() + idx,
     name: String(b.name).trim(),
     price: Number(b.price),
     originalPrice: b.originalPrice ? Number(b.originalPrice) : undefined,
@@ -79,7 +97,22 @@ router.post('/products/batch', (req, res) => {
     createdAt: new Date().toISOString(),
   }));
 
-  cachedProducts = [...formatted, ...cachedProducts];
+  for (const item of formatted) {
+    const existingIdx = cachedProducts.findIndex(
+      (p) =>
+        String(p.id) === String(item.id) ||
+        (p.name &&
+          p.category &&
+          p.name.trim().toLowerCase() === item.name.toLowerCase() &&
+          p.category.trim().toLowerCase() === item.category.toLowerCase())
+    );
+    if (existingIdx !== -1) {
+      cachedProducts[existingIdx] = { ...cachedProducts[existingIdx], ...item };
+    } else {
+      cachedProducts.unshift(item);
+    }
+  }
+
   res.status(201).json({ success: true, addedCount: formatted.length, products: cachedProducts });
 });
 
@@ -107,8 +140,25 @@ router.put('/products/:id', (req, res) => {
 
 router.delete('/products/:id', (req, res) => {
   const id = Number(req.params.id) || req.params.id;
+  const target = cachedProducts.find((p) => p.id == id || String(p.id) === String(id));
+  const targetName = target ? target.name.trim().toLowerCase() : '';
+  const targetCat = target ? target.category.trim().toLowerCase() : '';
+
   const initialLength = cachedProducts.length;
-  cachedProducts = cachedProducts.filter((p) => p.id !== id && String(p.id) !== String(id));
+  cachedProducts = cachedProducts.filter((p) => {
+    if (p.id == id || String(p.id) === String(id)) return false;
+    if (
+      targetName &&
+      targetCat &&
+      p.name &&
+      p.category &&
+      p.name.trim().toLowerCase() === targetName &&
+      p.category.trim().toLowerCase() === targetCat
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   if (cachedProducts.length === initialLength) {
     return res.status(404).json({ success: false, message: 'Product not found.' });

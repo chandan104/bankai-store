@@ -50,24 +50,43 @@ app.get('/api/products', (req, res) => {
 });
 
 app.post('/api/products', (req, res) => {
-  const { name, price, originalPrice, category, anime, image, isTrending, stockStatus } = req.body;
+  const { id, name, price, originalPrice, category, anime, image, isTrending, stockStatus } = req.body;
   if (!name || !price || !category || !anime || !image) {
     return res.status(400).json({ success: false, message: 'All required fields must be filled.' });
   }
 
+  const assignedId = id ? (Number(id) || id) : Date.now();
+  const trimmedName = String(name).trim();
+  const trimmedCategory = String(category).trim();
+
   const products = readJson('products.json', []);
   const newProduct = {
-    id: Date.now(),
-    name: String(name).trim(),
+    id: assignedId,
+    name: trimmedName,
     price: Number(price),
     originalPrice: originalPrice ? Number(originalPrice) : undefined,
-    category: String(category).trim(),
+    category: trimmedCategory,
     anime: String(anime).trim(),
     image: String(image).trim(),
     isTrending: Boolean(isTrending),
     stockStatus: stockStatus || 'In Stock',
     createdAt: new Date().toISOString(),
   };
+
+  const existingIdx = products.findIndex(
+    (p) =>
+      String(p.id) === String(assignedId) ||
+      (p.name &&
+        p.category &&
+        p.name.trim().toLowerCase() === trimmedName.toLowerCase() &&
+        p.category.trim().toLowerCase() === trimmedCategory.toLowerCase())
+  );
+
+  if (existingIdx !== -1) {
+    products[existingIdx] = { ...products[existingIdx], ...newProduct };
+    writeJson('products.json', products);
+    return res.status(200).json({ success: true, product: products[existingIdx] });
+  }
 
   products.unshift(newProduct);
   writeJson('products.json', products);
@@ -83,7 +102,7 @@ app.post('/api/products/batch', (req, res) => {
 
   const products = readJson('products.json', []);
   const formatted = items.map((b, idx) => ({
-    id: Date.now() + idx,
+    id: b.id || Date.now() + idx,
     name: String(b.name).trim(),
     price: Number(b.price),
     originalPrice: b.originalPrice ? Number(b.originalPrice) : undefined,
@@ -95,10 +114,24 @@ app.post('/api/products/batch', (req, res) => {
     createdAt: new Date().toISOString(),
   }));
 
-  const updated = [...formatted, ...products];
-  writeJson('products.json', updated);
+  for (const item of formatted) {
+    const existingIdx = products.findIndex(
+      (p) =>
+        String(p.id) === String(item.id) ||
+        (p.name &&
+          p.category &&
+          p.name.trim().toLowerCase() === item.name.toLowerCase() &&
+          p.category.trim().toLowerCase() === item.category.toLowerCase())
+    );
+    if (existingIdx !== -1) {
+      products[existingIdx] = { ...products[existingIdx], ...item };
+    } else {
+      products.unshift(item);
+    }
+  }
 
-  res.status(201).json({ success: true, addedCount: formatted.length, products: updated });
+  writeJson('products.json', products);
+  res.status(201).json({ success: true, addedCount: formatted.length, products });
 });
 
 app.put('/api/products/:id', (req, res) => {
@@ -129,7 +162,24 @@ app.put('/api/products/:id', (req, res) => {
 app.delete('/api/products/:id', (req, res) => {
   const id = Number(req.params.id) || req.params.id;
   const products = readJson('products.json', []);
-  const filtered = products.filter((p) => p.id !== id && String(p.id) !== String(id));
+  const target = products.find((p) => p.id == id || String(p.id) === String(id));
+  const targetName = target ? target.name.trim().toLowerCase() : '';
+  const targetCat = target ? target.category.trim().toLowerCase() : '';
+
+  const filtered = products.filter((p) => {
+    if (p.id == id || String(p.id) === String(id)) return false;
+    if (
+      targetName &&
+      targetCat &&
+      p.name &&
+      p.category &&
+      p.name.trim().toLowerCase() === targetName &&
+      p.category.trim().toLowerCase() === targetCat
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   if (filtered.length === products.length) {
     return res.status(404).json({ success: false, message: 'Product not found.' });

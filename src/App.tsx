@@ -27,17 +27,48 @@ const DEFAULT_SETTINGS: IStoreSettings = {
   currency: '₹',
 };
 
+// Deduplication helper to prevent double-rendered cards
+export const deduplicateProducts = (list: Product[]): Product[] => {
+  if (!Array.isArray(list)) return [];
+  const seenIds = new Set<string>();
+  const seenContentKeys = new Set<string>();
+  const unique: Product[] = [];
+
+  for (const item of list) {
+    if (!item) continue;
+    const idKey = String(item.id || '').trim();
+    const nameKey = (item.name || '').trim().toLowerCase();
+    const catKey = (item.category || '').trim().toLowerCase();
+    const contentKey = nameKey ? `${nameKey}:::${catKey}` : '';
+
+    if (idKey && seenIds.has(idKey)) continue;
+    if (contentKey && seenContentKeys.has(contentKey)) continue;
+
+    if (idKey) seenIds.add(idKey);
+    if (contentKey) seenContentKeys.add(contentKey);
+    unique.push(item);
+  }
+
+  return unique;
+};
+
 export const App: React.FC = () => {
-  // Initialize with local cache or fallback seed data
+  // Initialize with local cache or fallback seed data, automatically cleaning any existing duplicates
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const cached = localStorage.getItem('bankai_products');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const deduplicated = deduplicateProducts(parsed);
+          try {
+            localStorage.setItem('bankai_products', JSON.stringify(deduplicated));
+          } catch (e) {}
+          return deduplicated;
+        }
       }
     } catch (e) {}
-    return initialProducts as Product[];
+    return deduplicateProducts(initialProducts as Product[]);
   });
 
   const [settings, setSettings] = useState<IStoreSettings>(() => {
@@ -68,7 +99,7 @@ export const App: React.FC = () => {
     return new URLSearchParams(window.location.search).get('admin') === 'true';
   });
 
-  // Fetch live API data from server with smart persistence merge
+  // Fetch live API data from server with smart persistence merge & strict deduplication
   const fetchData = async () => {
     try {
       const [resProd, resSet, resStats, resQuotes, resQuiz] = await Promise.all([
@@ -81,12 +112,21 @@ export const App: React.FC = () => {
 
       if (resProd && resProd.products && Array.isArray(resProd.products)) {
         setProducts((prev) => {
-          const serverMap = new Map(resProd.products.map((p: Product) => [String(p.id), p]));
-          // Retain custom items added by admin locally (timestamp ID > 10 chars)
-          const localOnly = prev.filter(
-            (p) => String(p.id).length > 10 && !serverMap.has(String(p.id))
+          const serverProducts = resProd.products as Product[];
+          const serverMap = new Map(serverProducts.map((p: Product) => [String(p.id), p]));
+          const serverContentSet = new Set(
+            serverProducts.map((p: Product) => `${(p.name || '').trim().toLowerCase()}:::${(p.category || '').trim().toLowerCase()}`)
           );
-          const merged = [...localOnly, ...resProd.products];
+
+          // Retain local items that do not exist on the server by ID or content match
+          const localOnly = prev.filter((p) => {
+            const idMatch = serverMap.has(String(p.id));
+            const contentKey = `${(p.name || '').trim().toLowerCase()}:::${(p.category || '').trim().toLowerCase()}`;
+            const contentMatch = serverContentSet.has(contentKey);
+            return !idMatch && !contentMatch;
+          });
+
+          const merged = deduplicateProducts([...localOnly, ...serverProducts]);
           try {
             localStorage.setItem('bankai_products', JSON.stringify(merged));
           } catch (e) {}
@@ -132,10 +172,17 @@ export const App: React.FC = () => {
     return Array.from(new Set(products.map((p) => p.category))).filter(Boolean);
   }, [products]);
 
-  // Direct state updaters for 0ms lag persistence
+  // Direct state updaters for 0ms lag persistence & strict duplicate prevention
   const handleAddProduct = (newProd: Product) => {
     setProducts((prev) => {
-      const updated = [newProd, ...prev.filter((p) => String(p.id) !== String(newProd.id))];
+      const targetContentKey = `${(newProd.name || '').trim().toLowerCase()}:::${(newProd.category || '').trim().toLowerCase()}`;
+      const filtered = prev.filter((p) => {
+        if (String(p.id) === String(newProd.id)) return false;
+        const currentKey = `${(p.name || '').trim().toLowerCase()}:::${(p.category || '').trim().toLowerCase()}`;
+        return currentKey !== targetContentKey;
+      });
+
+      const updated = deduplicateProducts([newProd, ...filtered]);
       try {
         localStorage.setItem('bankai_products', JSON.stringify(updated));
       } catch (e) {}
@@ -145,7 +192,9 @@ export const App: React.FC = () => {
 
   const handleUpdateProduct = (updatedProd: Product) => {
     setProducts((prev) => {
-      const updated = prev.map((p) => (String(p.id) === String(updatedProd.id) ? updatedProd : p));
+      const updated = deduplicateProducts(
+        prev.map((p) => (String(p.id) === String(updatedProd.id) ? updatedProd : p))
+      );
       try {
         localStorage.setItem('bankai_products', JSON.stringify(updated));
       } catch (e) {}
@@ -155,7 +204,23 @@ export const App: React.FC = () => {
 
   const handleDeleteProduct = (id: number | string) => {
     setProducts((prev) => {
-      const updated = prev.filter((p) => String(p.id) !== String(id));
+      const target = prev.find((p) => String(p.id) === String(id));
+      const targetName = target ? target.name.trim().toLowerCase() : '';
+      const targetCat = target ? target.category.trim().toLowerCase() : '';
+
+      const updated = prev.filter((p) => {
+        if (String(p.id) === String(id)) return false;
+        if (
+          targetName &&
+          targetCat &&
+          p.name.trim().toLowerCase() === targetName &&
+          p.category.trim().toLowerCase() === targetCat
+        ) {
+          return false;
+        }
+        return true;
+      });
+
       try {
         localStorage.setItem('bankai_products', JSON.stringify(updated));
       } catch (e) {}
@@ -177,7 +242,7 @@ export const App: React.FC = () => {
         stockStatus: b.stockStatus || 'In Stock',
         createdAt: new Date().toISOString(),
       })) as Product[];
-      const updated = [...formatted, ...prev];
+      const updated = deduplicateProducts([...formatted, ...prev]);
       try {
         localStorage.setItem('bankai_products', JSON.stringify(updated));
       } catch (e) {}

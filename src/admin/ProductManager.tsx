@@ -332,6 +332,7 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
 
     const finalCategory = isCustomCategory ? customCategoryInput.trim() : formCategory.trim();
     const finalAnime = isCustomAnime ? customAnimeInput.trim() : formAnime.trim();
@@ -344,8 +345,9 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
     setLoading(true);
     setMessage(null);
 
+    const assignedId = editingProduct ? editingProduct.id : Date.now();
     const productPayload: Product = {
-      id: editingProduct ? editingProduct.id : Date.now(),
+      id: assignedId,
       name: formName.trim(),
       price: Number(formPrice),
       originalPrice: formOriginalPrice ? Number(formOriginalPrice) : undefined,
@@ -364,7 +366,7 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
     }
 
     try {
-      // 2. Also send to API server
+      // 2. Also send to API server with preserved ID
       if (editingProduct) {
         await fetch(`/api/products/${editingProduct.id}`, {
           method: 'PUT',
@@ -372,11 +374,18 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
           body: JSON.stringify(productPayload),
         }).catch(() => null);
       } else {
-        await fetch('/api/products', {
+        const res = await fetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productPayload),
         }).catch(() => null);
+
+        if (res && res.ok) {
+          const result = await res.json().catch(() => null);
+          if (result?.success && result?.product && onUpdateProduct) {
+            onUpdateProduct(result.product);
+          }
+        }
       }
 
       setMessage({
