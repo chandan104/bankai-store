@@ -409,17 +409,35 @@ export const ProductManager: React.FC<ProductManagerProps> = ({
   };
 
   const handleDelete = async (id: number | string) => {
+    if (loading) return;
     setLoading(true);
-    // 1. Immediately remove from local state
+
+    const target = products.find((p) => String(p.id) === String(id));
+    const targetName = target?.name || '';
+    const targetCategory = target?.category || '';
+
+    // 1. Immediately remove from local state & update persistent deleted tracking
     if (onDeleteProduct) onDeleteProduct(id);
     setDeletingId(null);
 
     try {
-      // 2. Also notify server API
-      await fetch(`/api/products/${id}`, { method: 'DELETE' }).catch(() => null);
-      onRefresh();
+      // 2. Also notify server API with query parameters for precise matching
+      const params = new URLSearchParams();
+      if (targetName) params.set('name', targetName);
+      if (targetCategory) params.set('category', targetCategory);
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+
+      await fetch(`/api/products/${encodeURIComponent(id)}${queryStr}`, { method: 'DELETE' }).catch(() => null);
+
+      setMessage({
+        type: 'success',
+        text: `Deleted "${targetName || 'Product'}" successfully.`,
+      });
+      setTimeout(() => setMessage(null), 3000);
+
+      if (onRefresh) onRefresh();
     } catch (err) {
-      onRefresh();
+      if (onRefresh) onRefresh();
     } finally {
       setLoading(false);
     }

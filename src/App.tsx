@@ -52,15 +52,37 @@ export const deduplicateProducts = (list: Product[]): Product[] => {
   return unique;
 };
 
+// Persistent deletion tracking helpers
+export const getDeletedSet = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem('bankai_deleted_ids');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return new Set(parsed.map((x) => String(x).trim().toLowerCase()));
+    }
+  } catch (e) {}
+  return new Set();
+};
+
+export const isProductDeleted = (p: Product, deletedSet: Set<string>): boolean => {
+  if (!p) return true;
+  if (deletedSet.has(String(p.id).trim().toLowerCase())) return true;
+  const nameKey = (p.name || '').trim().toLowerCase();
+  const catKey = (p.category || '').trim().toLowerCase();
+  if (nameKey && catKey && deletedSet.has(`${nameKey}:::${catKey}`)) return true;
+  return false;
+};
+
 export const App: React.FC = () => {
-  // Initialize with local cache or fallback seed data, automatically cleaning any existing duplicates
+  // Initialize with local cache or fallback seed data, automatically cleaning any deleted products
   const [products, setProducts] = useState<Product[]>(() => {
+    const deletedSet = getDeletedSet();
     try {
       const cached = localStorage.getItem('bankai_products');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const deduplicated = deduplicateProducts(parsed);
+          const deduplicated = deduplicateProducts(parsed).filter((p) => !isProductDeleted(p, deletedSet));
           try {
             localStorage.setItem('bankai_products', JSON.stringify(deduplicated));
           } catch (e) {}
@@ -68,7 +90,7 @@ export const App: React.FC = () => {
         }
       }
     } catch (e) {}
-    return deduplicateProducts(initialProducts as Product[]);
+    return deduplicateProducts(initialProducts as Product[]).filter((p) => !isProductDeleted(p, deletedSet));
   });
 
   const [settings, setSettings] = useState<IStoreSettings>(() => {
@@ -99,34 +121,45 @@ export const App: React.FC = () => {
     return new URLSearchParams(window.location.search).get('admin') === 'true';
   });
 
-  // Fetch live API data from server with smart persistence merge & strict deduplication
+  // Fetch live API data from server with smart persistence merge & strict deduplication & deletion filtering
   const fetchData = async () => {
     try {
-      const [resProd, resSet, resStats, resQuotes, resQuiz] = await Promise.all([
+      const [resProd, resSet, resStats, resQuotes, resQuiz, resDeleted] = await Promise.all([
         fetch('/api/products').then((r) => r.json()).catch(() => null),
         fetch('/api/settings').then((r) => r.json()).catch(() => null),
         fetch('/api/stats').then((r) => r.json()).catch(() => null),
         fetch('/api/quotes').then((r) => r.json()).catch(() => null),
         fetch('/api/quiz').then((r) => r.json()).catch(() => null),
+        fetch('/api/products/deleted').then((r) => r.json()).catch(() => null),
       ]);
+
+      const deletedSet = getDeletedSet();
+      if (resDeleted && Array.isArray(resDeleted.deleted)) {
+        resDeleted.deleted.forEach((d: string) => deletedSet.add(String(d).trim().toLowerCase()));
+        try {
+          localStorage.setItem('bankai_deleted_ids', JSON.stringify(Array.from(deletedSet)));
+        } catch (e) {}
+      }
 
       if (resProd && resProd.products && Array.isArray(resProd.products)) {
         setProducts((prev) => {
-          const serverProducts = resProd.products as Product[];
+          const activeDeleted = getDeletedSet();
+          const serverProducts = (resProd.products as Product[]).filter((p) => !isProductDeleted(p, activeDeleted));
           const serverMap = new Map(serverProducts.map((p: Product) => [String(p.id), p]));
           const serverContentSet = new Set(
             serverProducts.map((p: Product) => `${(p.name || '').trim().toLowerCase()}:::${(p.category || '').trim().toLowerCase()}`)
           );
 
-          // Retain local items that do not exist on the server by ID or content match
+          // Retain local items that do not exist on the server by ID or content match, and not deleted
           const localOnly = prev.filter((p) => {
+            if (isProductDeleted(p, activeDeleted)) return false;
             const idMatch = serverMap.has(String(p.id));
             const contentKey = `${(p.name || '').trim().toLowerCase()}:::${(p.category || '').trim().toLowerCase()}`;
             const contentMatch = serverContentSet.has(contentKey);
             return !idMatch && !contentMatch;
           });
 
-          const merged = deduplicateProducts([...localOnly, ...serverProducts]);
+          const merged = deduplicateProducts([...localOnly, ...serverProducts]).filter((p) => !isProductDeleted(p, activeDeleted));
           try {
             localStorage.setItem('bankai_products', JSON.stringify(merged));
           } catch (e) {}
@@ -172,8 +205,22 @@ export const App: React.FC = () => {
     return Array.from(new Set(products.map((p) => p.category))).filter(Boolean);
   }, [products]);
 
-  // Direct state updaters for 0ms lag persistence & strict duplicate prevention
+  // Direct state updaters for 0ms lag persistence & strict duplicate/deletion prevention
   const handleAddProduct = (newProd: Product) => {
+    // Unmark from deleted set if re-adding
+    try {
+      const raw = localStorage.getItem('bankai_deleted_ids');
+      if (raw) {
+        const deletedArr: string[] = JSON.parse(raw);
+        const targetContentKey = `${(newProd.name || '').trim().toLowerCase()}:::${(newProd.category || '').trim().toLowerCase()}`;
+        const targetIdStr = String(newProd.id).trim().toLowerCase();
+        const cleaned = deletedArr.filter(
+          (d) => String(d).trim().toLowerCase() !== targetIdStr && String(d).trim().toLowerCase() !== targetContentKey
+        );
+        localStorage.setItem('bankai_deleted_ids', JSON.stringify(cleaned));
+      }
+    } catch (e) {}
+
     setProducts((prev) => {
       const targetContentKey = `${(newProd.name || '').trim().toLowerCase()}:::${(newProd.category || '').trim().toLowerCase()}`;
       const filtered = prev.filter((p) => {
@@ -208,11 +255,25 @@ export const App: React.FC = () => {
       const targetName = target ? target.name.trim().toLowerCase() : '';
       const targetCat = target ? target.category.trim().toLowerCase() : '';
 
+      // Persistently record deletion in localStorage bankai_deleted_ids
+      try {
+        const raw = localStorage.getItem('bankai_deleted_ids');
+        const deletedArr: string[] = raw ? JSON.parse(raw) : [];
+        const deletedSet = new Set<string>(deletedArr.map((x) => String(x).trim().toLowerCase()));
+        deletedSet.add(String(id).trim().toLowerCase());
+        if (targetName && targetCat) {
+          deletedSet.add(`${targetName}:::${targetCat}`);
+        }
+        localStorage.setItem('bankai_deleted_ids', JSON.stringify(Array.from(deletedSet)));
+      } catch (e) {}
+
       const updated = prev.filter((p) => {
         if (String(p.id) === String(id)) return false;
         if (
           targetName &&
           targetCat &&
+          p.name &&
+          p.category &&
           p.name.trim().toLowerCase() === targetName &&
           p.category.trim().toLowerCase() === targetCat
         ) {
@@ -276,6 +337,7 @@ export const App: React.FC = () => {
   const handleResetStore = async () => {
     if (!confirm('Are you sure you want to restore the store to the default 50 anime collectibles?')) return;
     try {
+      localStorage.removeItem('bankai_deleted_ids');
       const res = await fetch('/api/products/reset', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
@@ -285,6 +347,7 @@ export const App: React.FC = () => {
       }
     } catch (err) {
       // Local fallback reset
+      localStorage.removeItem('bankai_deleted_ids');
       setProducts(initialProducts as Product[]);
       localStorage.setItem('bankai_products', JSON.stringify(initialProducts));
       alert('Store reset to default 50 products.');

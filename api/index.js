@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import https from 'https';
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -16,8 +18,50 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// In-memory cache for serverless environment
-let cachedProducts = [...seedProducts];
+// Persistent /tmp storage for Vercel serverless environment
+const TMP_PRODUCTS_FILE = '/tmp/bankai_products.json';
+const TMP_DELETED_FILE = '/tmp/bankai_deleted.json';
+
+function getPersistedDeleted() {
+  try {
+    if (fs.existsSync(TMP_DELETED_FILE)) {
+      const data = JSON.parse(fs.readFileSync(TMP_DELETED_FILE, 'utf8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch (e) {}
+  return [];
+}
+
+function savePersistedDeleted(list) {
+  try {
+    fs.writeFileSync(TMP_DELETED_FILE, JSON.stringify(list));
+  } catch (e) {}
+}
+
+function getPersistedProducts() {
+  try {
+    if (fs.existsSync(TMP_PRODUCTS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(TMP_PRODUCTS_FILE, 'utf8'));
+      if (Array.isArray(data) && data.length > 0) return data;
+    }
+  } catch (e) {}
+  return [...seedProducts];
+}
+
+function savePersistedProducts(list) {
+  try {
+    fs.writeFileSync(TMP_PRODUCTS_FILE, JSON.stringify(list));
+  } catch (e) {}
+}
+
+let cachedDeleted = getPersistedDeleted();
+let cachedProducts = getPersistedProducts().filter((p) => {
+  const isDel =
+    cachedDeleted.includes(String(p.id)) ||
+    cachedDeleted.includes(`${(p.name || '').trim().toLowerCase()}:::${(p.category || '').trim().toLowerCase()}`);
+  return !isDel;
+});
+
 let cachedOrders = [];
 let cachedSettings = {
   storeName: 'Bankai Store',
@@ -34,7 +78,18 @@ const router = express.Router();
 
 // 1. Products
 router.get('/products', (req, res) => {
-  res.json({ success: true, count: cachedProducts.length, products: cachedProducts });
+  // Always filter out any deleted products
+  const active = cachedProducts.filter((p) => {
+    const isDel =
+      cachedDeleted.includes(String(p.id)) ||
+      cachedDeleted.includes(`${(p.name || '').trim().toLowerCase()}:::${(p.category || '').trim().toLowerCase()}`);
+    return !isDel;
+  });
+  res.json({ success: true, count: active.length, products: active });
+});
+
+router.get('/products/deleted', (req, res) => {
+  res.json({ success: true, deleted: cachedDeleted });
 });
 
 router.post('/products', (req, res) => {
@@ -46,6 +101,12 @@ router.post('/products', (req, res) => {
   const assignedId = id ? (Number(id) || id) : Date.now();
   const trimmedName = String(name).trim();
   const trimmedCategory = String(category).trim();
+
+  // If re-adding an item previously deleted, remove it from deleted list
+  cachedDeleted = cachedDeleted.filter(
+    (d) => d !== String(assignedId) && d !== `${trimmedName.toLowerCase()}:::${trimmedCategory.toLowerCase()}`
+  );
+  savePersistedDeleted(cachedDeleted);
 
   const newProduct = {
     id: assignedId,
@@ -71,10 +132,12 @@ router.post('/products', (req, res) => {
 
   if (existingIdx !== -1) {
     cachedProducts[existingIdx] = { ...cachedProducts[existingIdx], ...newProduct };
+    savePersistedProducts(cachedProducts);
     return res.status(200).json({ success: true, product: cachedProducts[existingIdx] });
   }
 
   cachedProducts.unshift(newProduct);
+  savePersistedProducts(cachedProducts);
   res.status(201).json({ success: true, product: newProduct });
 });
 
@@ -98,6 +161,10 @@ router.post('/products/batch', (req, res) => {
   }));
 
   for (const item of formatted) {
+    cachedDeleted = cachedDeleted.filter(
+      (d) => d !== String(item.id) && d !== `${item.name.toLowerCase()}:::${item.category.toLowerCase()}`
+    );
+
     const existingIdx = cachedProducts.findIndex(
       (p) =>
         String(p.id) === String(item.id) ||
@@ -113,6 +180,8 @@ router.post('/products/batch', (req, res) => {
     }
   }
 
+  savePersistedDeleted(cachedDeleted);
+  savePersistedProducts(cachedProducts);
   res.status(201).json({ success: true, addedCount: formatted.length, products: cachedProducts });
 });
 
@@ -135,16 +204,31 @@ router.put('/products/:id', (req, res) => {
   };
 
   cachedProducts[index] = updated;
+  savePersistedProducts(cachedProducts);
   res.json({ success: true, product: updated });
 });
 
 router.delete('/products/:id', (req, res) => {
   const id = Number(req.params.id) || req.params.id;
-  const target = cachedProducts.find((p) => p.id == id || String(p.id) === String(id));
-  const targetName = target ? target.name.trim().toLowerCase() : '';
-  const targetCat = target ? target.category.trim().toLowerCase() : '';
+  const nameQuery = req.query.name ? String(req.query.name).trim().toLowerCase() : '';
+  const catQuery = req.query.category ? String(req.query.category).trim().toLowerCase() : '';
 
-  const initialLength = cachedProducts.length;
+  const target = cachedProducts.find((p) => p.id == id || String(p.id) === String(id));
+  const targetName = target ? target.name.trim().toLowerCase() : nameQuery;
+  const targetCat = target ? target.category.trim().toLowerCase() : catQuery;
+
+  // Add to persistent deleted list
+  if (!cachedDeleted.includes(String(id))) {
+    cachedDeleted.push(String(id));
+  }
+  if (targetName && targetCat) {
+    const key = `${targetName}:::${targetCat}`;
+    if (!cachedDeleted.includes(key)) {
+      cachedDeleted.push(key);
+    }
+  }
+  savePersistedDeleted(cachedDeleted);
+
   cachedProducts = cachedProducts.filter((p) => {
     if (p.id == id || String(p.id) === String(id)) return false;
     if (
@@ -160,15 +244,15 @@ router.delete('/products/:id', (req, res) => {
     return true;
   });
 
-  if (cachedProducts.length === initialLength) {
-    return res.status(404).json({ success: false, message: 'Product not found.' });
-  }
-
+  savePersistedProducts(cachedProducts);
   res.json({ success: true, message: 'Product deleted successfully.' });
 });
 
 router.post('/products/reset', (req, res) => {
+  cachedDeleted = [];
+  savePersistedDeleted([]);
   cachedProducts = [...seedProducts];
+  savePersistedProducts(cachedProducts);
   res.json({ success: true, message: 'Store reset to default 50 products.', count: cachedProducts.length });
 });
 

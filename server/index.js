@@ -46,7 +46,19 @@ const seedProducts = readJson('products.json', []);
 // 1. Products
 app.get('/api/products', (req, res) => {
   const products = readJson('products.json', []);
-  res.json({ success: true, count: products.length, products });
+  const deleted = readJson('deleted.json', []);
+  const active = products.filter((p) => {
+    const isDel =
+      deleted.includes(String(p.id)) ||
+      deleted.includes(`${(p.name || '').trim().toLowerCase()}:::${(p.category || '').trim().toLowerCase()}`);
+    return !isDel;
+  });
+  res.json({ success: true, count: active.length, products: active });
+});
+
+app.get('/api/products/deleted', (req, res) => {
+  const deleted = readJson('deleted.json', []);
+  res.json({ success: true, deleted });
 });
 
 app.post('/api/products', (req, res) => {
@@ -58,6 +70,13 @@ app.post('/api/products', (req, res) => {
   const assignedId = id ? (Number(id) || id) : Date.now();
   const trimmedName = String(name).trim();
   const trimmedCategory = String(category).trim();
+
+  // If re-adding, remove from deleted.json
+  const deleted = readJson('deleted.json', []);
+  const updatedDeleted = deleted.filter(
+    (d) => d !== String(assignedId) && d !== `${trimmedName.toLowerCase()}:::${trimmedCategory.toLowerCase()}`
+  );
+  writeJson('deleted.json', updatedDeleted);
 
   const products = readJson('products.json', []);
   const newProduct = {
@@ -161,10 +180,26 @@ app.put('/api/products/:id', (req, res) => {
 
 app.delete('/api/products/:id', (req, res) => {
   const id = Number(req.params.id) || req.params.id;
+  const nameQuery = req.query.name ? String(req.query.name).trim().toLowerCase() : '';
+  const catQuery = req.query.category ? String(req.query.category).trim().toLowerCase() : '';
+
   const products = readJson('products.json', []);
   const target = products.find((p) => p.id == id || String(p.id) === String(id));
-  const targetName = target ? target.name.trim().toLowerCase() : '';
-  const targetCat = target ? target.category.trim().toLowerCase() : '';
+  const targetName = target ? target.name.trim().toLowerCase() : nameQuery;
+  const targetCat = target ? target.category.trim().toLowerCase() : catQuery;
+
+  // Add to deleted.json
+  const deleted = readJson('deleted.json', []);
+  if (!deleted.includes(String(id))) {
+    deleted.push(String(id));
+  }
+  if (targetName && targetCat) {
+    const key = `${targetName}:::${targetCat}`;
+    if (!deleted.includes(key)) {
+      deleted.push(key);
+    }
+  }
+  writeJson('deleted.json', deleted);
 
   const filtered = products.filter((p) => {
     if (p.id == id || String(p.id) === String(id)) return false;
@@ -181,15 +216,12 @@ app.delete('/api/products/:id', (req, res) => {
     return true;
   });
 
-  if (filtered.length === products.length) {
-    return res.status(404).json({ success: false, message: 'Product not found.' });
-  }
-
   writeJson('products.json', filtered);
   res.json({ success: true, message: 'Product deleted successfully.' });
 });
 
 app.post('/api/products/reset', (req, res) => {
+  writeJson('deleted.json', []);
   const initialDataPath = path.join(__dirname, '../data/products.json');
   if (fs.existsSync(initialDataPath)) {
     const defaultData = JSON.parse(fs.readFileSync(initialDataPath, 'utf8'));
